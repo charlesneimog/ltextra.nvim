@@ -2,7 +2,7 @@
 
 `ltextra.nvim` is a plugin used to make easy the configuration and interation with [ltex](https://valentjn.github.io/ltex/settings.html). For example, to configure `ltex.enabledRules` (see the [Docs](https://valentjn.github.io/ltex/settings.html#ltexenabledrules)) you can use:
 
-``` lua
+```lua
 config = function()
   require("ltextra").setup({
     enabledRules = {
@@ -11,15 +11,15 @@ config = function()
   })
 end,
 ```
+
 `ltextra.nvim` also adds some functions to use with keymaps.
+
 - `require('ltextra.actions').add_word()`: Add the word under cursor to the dictionary.
 - `require('ltextra.actions').disable_rule()`: Add the word under cursor to the dictionary.
-- `require('ltextra.actions').add_word()`: Add the word under cursor to the dictionary.
-
 
 #### [Lazy](https://github.com/folke/lazy.nvim)
 
-``` lua
+```lua
 return {
   	"charlesneimog/ltextra.nvim",
   	dir = "~/Documents/Git/ltextra.nvim",

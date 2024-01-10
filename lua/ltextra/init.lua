@@ -2,6 +2,7 @@ local M = {}
 
 local json = require("ltextra.json")
 local lsp = require("ltextra.lsp")
+local vim = vim
 
 local function ltex_configs(config)
 	local newconfig = {
@@ -24,7 +25,7 @@ local function ltex_configs(config)
 	return newconfig
 end
 
-function create_file()
+function M._create_file()
 	local config = vim.g.ltex_config
 	vim.notify(vim.inspect(config))
 	vim.ui.input({
@@ -33,7 +34,7 @@ function create_file()
 		if answer == "y" then
 			local default = ltex_configs(config)
 			local workspace = vim.fn.getcwd()
-			local file, err, code = assert(io.open(workspace .. "/.ltex-ls", "wb"))
+			local file, err, _ = assert(io.open(workspace .. "/.ltex-ls", "wb"))
 			if err then
 				vim.notify("Error to create file: " .. err)
 				return
@@ -51,7 +52,7 @@ function M.setup(config)
 	vim.g.ltex_config = config
 	if not fileExists then
 		vim.defer_fn(function()
-			create_file()
+			require("ltextra")._create_file()
 		end, 3000)
 	else
 		lsp._ltex_setup()

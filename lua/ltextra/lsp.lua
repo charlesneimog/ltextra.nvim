@@ -1,24 +1,12 @@
 local M = {} -- M stands for module, a naming convention
 
+local json = require("ltextra.json")
+local vim = vim
+
+-- ===============================
 function M._updateWordsLsp()
-	local workspace = vim.fn.getcwd()
-	local file = io.open(workspace .. "/.ltex-ls", "rwb")
-	if not file then
-		vim.notify("There is no .ltex-ls file")
-		return nil
-	end
-	local jsonString = file:read("*a")
-	file:close()
-	local success, result = pcall(vim.fn.json_decode, jsonString)
-	if not success then
-		vim.notify("There is no .ltex-ls file")
-		return nil
-	end
-
-	local language = result.ltex.language
+	local result = json.read()
 	local dicts = result.ltex.dictionary
-
-	-- all clients attached to this buffer
 	local clients = vim.lsp.buf_get_clients(0)
 	for _, client in pairs(clients) do
 		local clientName = client.name
@@ -30,23 +18,27 @@ function M._updateWordsLsp()
 	end
 end
 
-function M._ltex_config()
-	local workspace = vim.fn.getcwd()
-	local file, err, code = assert(io.open(workspace .. "/.ltex-ls", "rb"))
-	if err then
-		print("Error to open file: " .. err)
-		return {}
+-- ===============================
+function M._updateDisableRulesLsp()
+	local result = json.read()
+	local newConfig = result.ltex.disabledRules
+	local clients = vim.lsp.buf_get_clients(0)
+	for _, client in pairs(clients) do
+		local clientName = client.name
+		if clientName == "ltex" then
+			local ltex_settings = client.config.settings
+			ltex_settings.ltex.disabledRules = newConfig
+			client.notify("workspace/didChangeConfiguration", { settings = ltex_settings })
+		end
 	end
-	local jsonString = file:read("*a")
-	file:close()
-	local success, result = pcall(vim.json.decode, jsonString)
-	if not success then
-		vim.notify("Cannot decode ltex file, check .ltex-ls syntax", vim.log.levels.ERROR)
-		return {}
-	end
-	return result
 end
 
+-- ===============================
+function M._ltex_config()
+	return json.read() or {}
+end
+
+-- ===============================
 function M._ltex_setup()
 	require("lspconfig").ltex.setup({
 		capabilities = capabilities,
