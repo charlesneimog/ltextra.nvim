@@ -10,15 +10,19 @@ config = function()
     },
   })
 end,
+```
+`ltextra.nvim` also adds some functions to use with keymaps.
+- `require('ltextra.actions').add_word()`: Add the word under cursor to the dictionary.
+- `require('ltextra.actions').disable_rule()`: Add the word under cursor to the dictionary.
+- `require('ltextra.actions').add_word()`: Add the word under cursor to the dictionary.
 
-``` 
 
 #### [Lazy](https://github.com/folke/lazy.nvim)
 
 ``` lua
 return {
-  "charlesneimog/ltextra.nvim",
-	dir = "~/Documents/Git/ltextra.nvim",
+  	"charlesneimog/ltextra.nvim",
+  	dir = "~/Documents/Git/ltextra.nvim",
 	keys = {
 		{
 			"aw",
@@ -29,12 +33,11 @@ return {
 			desc = "Add word to dictionary",
 		},
 	},
-	-- event = "BufRead *.tex",
-	event = "BufRead",
+	event = "BufRead *.tex",
 	config = function()
 		require("ltextra").setup({
 			language = "pt-BR",
-		})
+	})
 	end,
 }
 ```
