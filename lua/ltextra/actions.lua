@@ -25,9 +25,54 @@ function M.print_rule_under_cursor()
 end
 -- ===============================
 function M.ignore_command()
-	local config = json.read()
-	local wordUnderCursor = vim.fn.expand("<cword>")
-	vim.notify(vim.inspect(wordUnderCursor))
+	local clients = vim.lsp.buf_get_clients(0)
+	for _, client in pairs(clients) do
+		local clientName = client.name
+		if clientName == "ltex" then
+			-- get error under cursor
+			local errorsInLine = vim.lsp.diagnostic.get_line_diagnostics()
+			local _, cursorChar = unpack(vim.api.nvim_win_get_cursor(0))
+			local config = json.read()
+			for _, error in ipairs(errorsInLine) do
+				local errorStart = error.range.start
+				local errorEnd = error.range["end"]
+				if errorStart.character <= cursorChar and errorEnd.character >= cursorChar then
+					local buffer = vim.api.nvim_get_current_buf()
+					local line = vim.api.nvim_buf_get_lines(buffer, errorStart.line, errorStart.line + 1, false)[1]
+					local diagnosticText = line:sub(errorStart.character + 1, errorEnd.character + 1)
+					local transformedText = diagnosticText:gsub("(%b{})", "{}"):gsub("(%b[])", "[]")
+					vim.notify(vim.inspect(config.ltex.latex))
+					if config.ltex.latex == nil then
+						config.ltex = { ["latex"] = { ["commands"] = { tostring(transformedText) } } }
+					else
+						local oldConfig = config.ltex.latex.commands
+						if oldConfig == nil then
+							config.ltex["latex"]["commands"] = {}
+							config.ltex.latex.commands[tostring(transformedText)] = { "ignore" }
+						else
+							local ruleExists = false
+							for _, rule in ipairs(oldConfig) do
+								if rule == error.code then
+									ruleExists = true
+									break
+								end
+							end
+
+							-- If the rule is not in the list, add it
+							if not ruleExists then
+								if not oldConfig[tostring(transformedText)] then
+									oldConfig[tostring(transformedText)] = {}
+								end
+								oldConfig[tostring(transformedText)] = "ignore"
+							end
+						end
+					end
+					json.write(config)
+					lsp._updateCommandsLsp()
+				end
+			end
+		end
+	end
 end
 
 -- ===============================

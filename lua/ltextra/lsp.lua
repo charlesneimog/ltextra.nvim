@@ -4,6 +4,21 @@ local json = require("ltextra.json")
 local vim = vim
 
 -- ===============================
+function M._updateCommandsLsp()
+	local result = json.read()
+	local dicts = result.ltex.latex
+	local clients = vim.lsp.buf_get_clients(0)
+	for _, client in pairs(clients) do
+		local clientName = client.name
+		if clientName == "ltex" then
+			local ltex_settings = client.config.settings
+			ltex_settings.ltex.latex = dicts
+			client.notify("workspace/didChangeConfiguration", { settings = ltex_settings })
+		end
+	end
+end
+
+-- ===============================
 function M._updateWordsLsp()
 	local result = json.read()
 	local dicts = result.ltex.dictionary
