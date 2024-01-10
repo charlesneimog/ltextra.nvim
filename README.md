@@ -1,6 +1,6 @@
 # ltextra.nvim
 
-`ltextra.nvim` is a plugin used to make easy the configuration and interation with [ltex](https://valentjn.github.io/ltex/settings.html). For example, to configure `ltex.enabledRules` (see the [Docs](https://valentjn.github.io/ltex/settings.html#ltexenabledrules) you can use:
+`ltextra.nvim` is a plugin used to make easy the configuration and interation with [ltex](https://valentjn.github.io/ltex/settings.html). For example, to configure `ltex.enabledRules` (see the [Docs](https://valentjn.github.io/ltex/settings.html#ltexenabledrules)) you can use:
 
 ``` lua
 config = function()
