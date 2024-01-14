@@ -39,11 +39,19 @@ function M.ignore_command()
 				if errorStart.character <= cursorChar and errorEnd.character >= cursorChar then
 					local buffer = vim.api.nvim_get_current_buf()
 					local line = vim.api.nvim_buf_get_lines(buffer, errorStart.line, errorStart.line + 1, false)[1]
-					local diagnosticText = line:sub(errorStart.character + 1, errorEnd.character + 1)
+					local valueInt = 1
+					local diagnosticText = line:sub(errorStart.character + 1, errorEnd.character + valueInt)
+					-- make a while loop until the last character is a }
+					while diagnosticText:sub(-1) ~= "}" do -- HACK:
+						valueInt = valueInt + 1
+						diagnosticText = line:sub(errorStart.character + 1, errorEnd.character + valueInt)
+					end
+
 					local transformedText = diagnosticText:gsub("(%b{})", "{}"):gsub("(%b[])", "[]")
-					vim.notify(vim.inspect(config.ltex.latex))
 					if config.ltex.latex == nil then
-						config.ltex = { ["latex"] = { ["commands"] = { tostring(transformedText) } } }
+						config.ltex["latex"] = {}
+						config.ltex["latex"]["commands"] = {}
+						config.ltex.latex.commands[tostring(transformedText)] = "ignore"
 					else
 						local oldConfig = config.ltex.latex.commands
 						if oldConfig == nil then
@@ -68,7 +76,7 @@ function M.ignore_command()
 						end
 					end
 					json.write(config)
-					lsp._updateCommandsLsp()
+					lsp._updateLsp()
 				end
 			end
 		end
@@ -118,7 +126,54 @@ function M.disable_rule()
 					end
 
 					json.write(config)
-					lsp._updateDisableRulesLsp()
+					lsp._updateLsp()
+				end
+			end
+		end
+	end
+end
+
+-- ===============================
+function M.hidden_false_positive()
+	local config = json.read()
+	local clients = vim.lsp.buf_get_clients(0)
+	for _, client in pairs(clients) do
+		local clientName = client.name
+		if clientName == "ltex" then
+			-- get error under cursor
+			local errorsInLine = vim.lsp.diagnostic.get_line_diagnostics()
+			local _, cursorChar = unpack(vim.api.nvim_win_get_cursor(0))
+			local workspace = vim.fn.getcwd()
+			for _, error in ipairs(errorsInLine) do
+				local errorStart = error.range.start
+				local errorEnd = error.range["end"]
+				if errorStart.character <= cursorChar and errorEnd.character >= cursorChar then
+					local language = error.codeDescription.href:sub(-5)
+					local buffer = vim.api.nvim_get_current_buf()
+					local line = vim.api.nvim_buf_get_lines(buffer, errorStart.line, errorStart.line, false)[1]
+					local false_positive_sentence = line:sub(errorStart.character, errorEnd.character)
+					local false_positive_rule = error.code
+					if config.ltex.hiddenFalsePositives == nil then
+						config.ltex["hiddenFalsePositives"] = {}
+
+						config.ltex.hiddenFalsePositives[language] = workspace
+							.. ".ltex-hiddenFalsePositives."
+							.. language
+							.. ".txt"
+						-- create file
+						local file = io.open(config.ltex.hiddenFalsePositives[language], "w")
+						local newline = '{"rule":"'
+							.. false_positive_rule
+							.. '","sentence":"'
+							.. false_positive_sentence
+							.. '"}\n'
+						-- file:write(newline)
+						-- file:close()
+						vim.notify(vim.inspect(newline))
+					end
+					-- vim.notify(vim.inspect(config))
+					json.write(config)
+					lsp._updateLsp()
 				end
 			end
 		end
@@ -177,7 +232,7 @@ function M.add_word()
 
 	-- format the json to get new lines, indentation, etc
 	json.write(result)
-	lsp._updateWordsLsp()
+	lsp._updateLsp()
 end
 
 return M

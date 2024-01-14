@@ -4,45 +4,15 @@ local json = require("ltextra.json")
 local vim = vim
 
 -- ===============================
-function M._updateCommandsLsp()
-	local result = json.read()
-	local dicts = result.ltex.latex
+function M._updateLsp()
+	local jsonConfig = json.read()
+	local newConfig = jsonConfig.ltex
 	local clients = vim.lsp.buf_get_clients(0)
 	for _, client in pairs(clients) do
 		local clientName = client.name
 		if clientName == "ltex" then
 			local ltex_settings = client.config.settings
-			ltex_settings.ltex.latex = dicts
-			client.notify("workspace/didChangeConfiguration", { settings = ltex_settings })
-		end
-	end
-end
-
--- ===============================
-function M._updateWordsLsp()
-	local result = json.read()
-	local dicts = result.ltex.dictionary
-	local clients = vim.lsp.buf_get_clients(0)
-	for _, client in pairs(clients) do
-		local clientName = client.name
-		if clientName == "ltex" then
-			local ltex_settings = client.config.settings
-			ltex_settings.ltex.dictionary = dicts
-			client.notify("workspace/didChangeConfiguration", { settings = ltex_settings })
-		end
-	end
-end
-
--- ===============================
-function M._updateDisableRulesLsp()
-	local result = json.read()
-	local newConfig = result.ltex.disabledRules
-	local clients = vim.lsp.buf_get_clients(0)
-	for _, client in pairs(clients) do
-		local clientName = client.name
-		if clientName == "ltex" then
-			local ltex_settings = client.config.settings
-			ltex_settings.ltex.disabledRules = newConfig
+			ltex_settings.ltex = newConfig
 			client.notify("workspace/didChangeConfiguration", { settings = ltex_settings })
 		end
 	end
