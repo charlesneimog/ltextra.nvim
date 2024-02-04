@@ -148,30 +148,20 @@ function M.hidden_false_positive()
 				local errorStart = error.range.start
 				local errorEnd = error.range["end"]
 				if errorStart.character <= cursorChar and errorEnd.character >= cursorChar then
+					vim.notify(vim.inspect(error))
 					local language = error.codeDescription.href:sub(-5)
 					local buffer = vim.api.nvim_get_current_buf()
-					local line = vim.api.nvim_buf_get_lines(buffer, errorStart.line, errorStart.line, false)[1]
+					vim.notify(vim.inspect(buffer))
+					local line = vim.api.nvim_buf_get_lines(buffer, errorStart.line, errorStart.line + 1, false)[1]
 					local false_positive_sentence = line:sub(errorStart.character, errorEnd.character)
 					local false_positive_rule = error.code
 					if config.ltex.hiddenFalsePositives == nil then
 						config.ltex["hiddenFalsePositives"] = {}
-
-						config.ltex.hiddenFalsePositives[language] = workspace
-							.. ".ltex-hiddenFalsePositives."
-							.. language
-							.. ".txt"
-						-- create file
-						local file = io.open(config.ltex.hiddenFalsePositives[language], "w")
-						local newline = '{"rule":"'
-							.. false_positive_rule
-							.. '","sentence":"'
-							.. false_positive_sentence
-							.. '"}\n'
-						-- file:write(newline)
-						-- file:close()
-						vim.notify(vim.inspect(newline))
+						config.ltex.hiddenFalsePositives[language] = {}
+						config.ltex.hiddenFalsePositives[language] = {
+							{ rule = false_positive_rule, sentence = false_positive_sentence },
+						}
 					end
-					-- vim.notify(vim.inspect(config))
 					json.write(config)
 					lsp._updateLsp()
 				end
